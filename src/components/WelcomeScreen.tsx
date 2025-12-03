@@ -4,9 +4,11 @@ import { ExerciseType } from '../services/gemini';
 
 interface WelcomeScreenProps {
     onStart: (type: ExerciseType) => void;
+    nickname: string;
+    onNicknameChange: (name: string) => void;
 }
 
-const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart, nickname, onNicknameChange }) => {
     const categories: { type: ExerciseType; label: string; icon: React.ReactNode; color: string }[] = [
         { type: 'solve', label: 'Resolución de Problemas', icon: <BookOpen size={32} />, color: 'bg-blue-500' },
         { type: 'reformulate', label: 'Reformular Preguntas', icon: <RefreshCw size={32} />, color: 'bg-purple-500' },
@@ -22,6 +24,19 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
                 <h1 className="text-4xl font-bold text-gray-800 mb-2">
                     ¡A practicar! 🚀
                 </h1>
+
+                {/* Nickname Input */}
+                <div className="mb-8 max-w-md mx-auto">
+                    <label className="block text-gray-600 mb-2 font-bold">¿Cómo te llamas, aventurero?</label>
+                    <input
+                        type="text"
+                        value={nickname}
+                        onChange={(e) => onNicknameChange(e.target.value)}
+                        placeholder="Escribe tu apodo..."
+                        className="w-full text-center text-2xl p-3 border-2 border-gray-300 rounded-xl focus:border-andalucia-green focus:ring-2 focus:ring-green-100 outline-none transition-all"
+                    />
+                </div>
+
                 <p className="text-xl text-gray-600 mb-8">
                     Elige qué quieres entrenar hoy:
                 </p>
@@ -31,7 +46,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
                         <button
                             key={cat.type}
                             onClick={() => onStart(cat.type)}
-                            className={`${cat.color} hover:opacity-90 text-white p-6 rounded-2xl shadow-md transform hover:scale-105 transition-all flex flex-col items-center justify-center gap-4 h-40`}
+                            disabled={!nickname.trim()}
+                            className={`${cat.color} ${!nickname.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90 hover:scale-105'} text-white p-6 rounded-2xl shadow-md transform transition-all flex flex-col items-center justify-center gap-4 h-40`}
                         >
                             <div className="bg-white/20 p-3 rounded-full">
                                 {cat.icon}

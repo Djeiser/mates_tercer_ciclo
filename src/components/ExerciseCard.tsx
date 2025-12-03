@@ -7,9 +7,10 @@ interface ExerciseCardProps {
     exercise: Exercise;
     onNext: () => void;
     loading: boolean;
+    onResult: (isCorrect: boolean) => void;
 }
 
-const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onNext, loading }) => {
+const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onNext, loading, onResult }) => {
     const [userAnswer, setUserAnswer] = useState("");
     const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
     const [evaluating, setEvaluating] = useState(false);
@@ -30,6 +31,8 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onNext, loading }
                     origin: { y: 0.6 }
                 });
             }
+
+            onResult(result.isCorrect);
         } catch (error) {
             console.error(error);
         } finally {

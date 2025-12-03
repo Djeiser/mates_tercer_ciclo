@@ -1,7 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import WelcomeScreen from './components/WelcomeScreen';
 import ExerciseCard from './components/ExerciseCard';
+import GamificationHUD from './components/GamificationHUD';
 import { generateExercise, Exercise, ExerciseType } from './services/gemini';
+import { useGamification } from './hooks/useGamification';
+import { useSounds } from './hooks/useSounds';
 import { Home } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -9,6 +12,12 @@ const App: React.FC = () => {
     const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Gamification Hook
+    const { nickname, setNickname, xp, level, streak, addXp, incrementStreak, resetStreak } = useGamification();
+
+    // Sound Hook
+    const { playCorrect, playIncorrect, playLevelUp } = useSounds();
 
     const handleStart = (type: ExerciseType) => {
         setCurrentCategory(type);
@@ -19,6 +28,28 @@ const App: React.FC = () => {
         setCurrentCategory(null);
         setCurrentExercise(null);
         setError(null);
+    };
+
+    const handleExerciseResult = (isCorrect: boolean) => {
+        if (isCorrect) {
+            playCorrect();
+            addXp(10);
+            incrementStreak();
+
+            // Check for level up (simple check: if XP ends in 90, next is 100 -> level up)
+            // Better logic: calculate if level changed.
+            const nextXp = xp + 10;
+            const currentLevel = Math.floor(xp / 100) + 1;
+            const nextLevel = Math.floor(nextXp / 100) + 1;
+
+            if (nextLevel > currentLevel) {
+                setTimeout(() => playLevelUp(), 500); // Delay slightly for effect
+            }
+
+        } else {
+            playIncorrect();
+            resetStreak();
+        }
     };
 
     const fetchNewExercise = useCallback(async (type?: ExerciseType) => {
@@ -42,13 +73,25 @@ const App: React.FC = () => {
     if (!currentCategory) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4 flex flex-col items-center justify-center">
-                <WelcomeScreen onStart={handleStart} />
+                <WelcomeScreen
+                    onStart={handleStart}
+                    nickname={nickname}
+                    onNicknameChange={setNickname}
+                />
             </div>
         );
     }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4 flex flex-col items-center">
+
+            {/* Gamification HUD */}
+            <GamificationHUD
+                nickname={nickname}
+                level={level}
+                xp={xp}
+                streak={streak}
+            />
 
             {/* Navbar / Header */}
             <div className="w-full max-w-4xl flex justify-between items-center mb-8 px-4">
@@ -98,6 +141,7 @@ const App: React.FC = () => {
                         exercise={currentExercise}
                         onNext={() => fetchNewExercise()}
                         loading={loading}
+                        onResult={handleExerciseResult}
                     />
                 )}
             </div>
