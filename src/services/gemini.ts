@@ -457,22 +457,10 @@ export const evaluateAnswer = async (exercise: Exercise, userAnswer: string): Pr
         return false;
     };
 
-    // 1. Local evaluation (FAST & ROBUST)
-    // If we have a known correct answer (from local generator OR parsed from AI JSON), use it first.
+    // 1. Local evaluation (Backup & Validation)
+    let localIsCorrect: boolean | null = null;
     if (exercise.correctAnswer) {
-        const isCorrect = checkAnswer(userAnswer, exercise.correctAnswer);
-
-        // If correct, return immediately (save API call)
-        if (isCorrect) {
-            await new Promise(resolve => setTimeout(resolve, 500)); // Small delay for feel
-            return {
-                isCorrect: true,
-                feedback: "¡Correcto! 🎉 Has dado con la solución exacta."
-            };
-        }
-        // If incorrect locally, we can still ask AI for a better explanation, 
-        // OR just return the error if we want to be safe/offline-capable.
-        // Let's try AI for explanation, but fallback to local correction.
+        localIsCorrect = checkAnswer(userAnswer, exercise.correctAnswer);
     }
 
     const prompt = `
@@ -484,7 +472,7 @@ export const evaluateAnswer = async (exercise: Exercise, userAnswer: string): Pr
     Respuesta del alumno: "${userAnswer}"
     
     Evalúa la respuesta.
-    - Si es correcta, felicítalo y explica brevemente por qué.
+    - Si es correcta, felicítalo y explica brevemente por qué (o el paso clave).
     - Si es incorrecta o incompleta, explica el error y da la solución correcta de forma pedagógica.
     - Si es un ejercicio abierto (inventar problema), valora la creatividad y si tiene sentido matemático.
     
@@ -495,18 +483,18 @@ export const evaluateAnswer = async (exercise: Exercise, userAnswer: string): Pr
         const result = await model.generateContent(prompt);
         const response = await result.response;
         return {
-            isCorrect: true, // AI decides tone, but we treat valid AI response as success flow
+            // Trust local validation if available (for strict checking), otherwise assume success (for open-ended AI evaluation)
+            isCorrect: localIsCorrect !== null ? localIsCorrect : true,
             feedback: response.text()
         };
     } catch (error) {
         console.error("Error evaluando respuesta:", error);
 
         // Fallback if AI fails
-        if (exercise.correctAnswer) {
-            const isCorrect = checkAnswer(userAnswer, exercise.correctAnswer);
+        if (localIsCorrect !== null) {
             return {
-                isCorrect,
-                feedback: isCorrect
+                isCorrect: localIsCorrect,
+                feedback: localIsCorrect
                     ? "¡Correcto! (Validado automáticamente)"
                     : `No es correcto. La solución era: ${exercise.correctAnswer}. ¡Inténtalo de nuevo!`
             };
