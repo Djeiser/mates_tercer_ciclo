@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Flame, Star } from 'lucide-react';
+import { Trophy, Flame } from 'lucide-react';
 
 interface GamificationHUDProps {
     nickname: string;
@@ -10,7 +10,6 @@ interface GamificationHUDProps {
 
 const GamificationHUD: React.FC<GamificationHUDProps> = ({ nickname, level, xp, streak }) => {
     // XP needed for next level (simple formula: level * 100)
-    const xpForNextLevel = level * 100;
     const progress = (xp % 100) / 100 * 100;
 
     return (
