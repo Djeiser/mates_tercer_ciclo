@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyCkByVMFTPt5QExh_uwkE0bgn9QWyPVsyw";
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 
 console.log("API Key present:", !!API_KEY);
 if (API_KEY) console.log("API Key length:", API_KEY.length);
