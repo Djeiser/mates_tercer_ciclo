@@ -488,7 +488,12 @@ export const evaluateAnswer = async (exercise: Exercise, userAnswer: string): Pr
             feedback: response.text()
         };
     } catch (error) {
-        console.error("Error evaluando respuesta:", error);
+        console.error("Error detallado evaluando respuesta:", error);
+        // @ts-ignore
+        if (error.response) {
+            // @ts-ignore
+            console.error("Detalles de la respuesta de error:", await error.response.text());
+        }
 
         // Fallback if AI fails
         if (localIsCorrect !== null) {

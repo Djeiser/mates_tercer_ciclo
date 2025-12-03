@@ -10,7 +10,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "@google/generative-ai": "^0.2.1",
+        "@google/generative-ai": "^0.24.1",
         "canvas-confetti": "^1.9.2",
         "clsx": "^2.1.0",
         "framer-motion": "^11.0.8",
