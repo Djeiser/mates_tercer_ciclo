@@ -479,23 +479,34 @@ export const evaluateAnswer = async (exercise: Exercise, userAnswer: string): Pr
     Responde en español, con tono animado.
     `;
 
-    try {
-        const result = await model.generateContent(prompt);
+    // Helper to try generation with a specific model
+    const tryGenerate = async (modelName: string) => {
+        const specificModel = genAI.getGenerativeModel({ model: modelName });
+        const result = await specificModel.generateContent(prompt);
         const response = await result.response;
+        return response.text();
+    };
+
+    try {
+        let feedbackText = "";
+        try {
+            // Try Flash first (Fast & Cheap)
+            feedbackText = await tryGenerate("gemini-1.5-flash");
+        } catch (flashError) {
+            console.warn("Gemini Flash falló, intentando con Pro...", flashError);
+            // Fallback to Pro (Stable)
+            feedbackText = await tryGenerate("gemini-pro");
+        }
+
         return {
             // Trust local validation if available (for strict checking), otherwise assume success (for open-ended AI evaluation)
             isCorrect: localIsCorrect !== null ? localIsCorrect : true,
-            feedback: response.text()
+            feedback: feedbackText
         };
     } catch (error) {
-        console.error("Error detallado evaluando respuesta:", error);
-        // @ts-ignore
-        if (error.response) {
-            // @ts-ignore
-            console.error("Detalles de la respuesta de error:", await error.response.text());
-        }
+        console.error("Error FATAL evaluando respuesta (ambos modelos fallaron):", error);
 
-        // Fallback if AI fails
+        // Fallback if AI fails completely
         if (localIsCorrect !== null) {
             return {
                 isCorrect: localIsCorrect,
@@ -507,7 +518,7 @@ export const evaluateAnswer = async (exercise: Exercise, userAnswer: string): Pr
 
         return {
             isCorrect: false,
-            feedback: "Hubo un error al evaluar tu respuesta y no tengo la solución guardada. ¡Pero seguro que lo has hecho genial! Inténtalo de nuevo."
+            feedback: "Hubo un error al conectar con el profesor virtual. ¡Pero seguro que lo has hecho genial! Inténtalo de nuevo más tarde."
         };
     }
 };
