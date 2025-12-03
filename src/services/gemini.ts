@@ -91,10 +91,17 @@ const getPrompt = (type: string): string => {
             `;
         case 'multiples':
             return `
-            Genera un problema o ejercicio sobre Múltiplos y Divisores para 5º de primaria.
-            TEMA OBLIGATORIO: ${context}.
-            Puede ser de calcular el MCM, MCD (con números sencillos) o problemas de agrupar cosas.
-            Formato JSON: { "type": "multiples", "question": "Enunciado del ejercicio", "hint": "Recuerda las reglas de divisibilidad." }
+            Genera un ejercicio de Múltiplos y Divisores para 5º de primaria.
+            
+            IMPORTANTE: NO incluyas ninguna historia, ni contexto, ni nombres de personajes.
+            Quiero SOLO la pregunta matemática directa.
+            
+            Elige ALEATORIAMENTE uno de estos 3 tipos de preguntas:
+            1. "Escribe todos los divisores de [número entre 10 y 50]".
+            2. "Escribe los múltiplos de [número entre 2 y 9] que hay entre [Rango A] y [Rango B]".
+            3. "¿Es [NumGrande] múltiplo de [NumPequeño]?" o "¿Es [NumPequeño] divisor de [NumGrande]?".
+            
+            Formato JSON: { "type": "multiples", "question": "La pregunta directa (ej: Escribe los múltiplos de 8 entre 30 y 70)", "hint": "Pista: Recuerda las tablas." }
             (Semilla de aleatoriedad: ${randomNum})
             `;
         case 'mental':
