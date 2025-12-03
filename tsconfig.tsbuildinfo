@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/exercisecard.tsx","./src/components/welcomescreen.tsx","./src/services/gemini.ts"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/botavatar.tsx","./src/components/exercisecard.tsx","./src/components/gamificationhud.tsx","./src/components/secretcodemodal.tsx","./src/components/welcomescreen.tsx","./src/hooks/usegamification.ts","./src/hooks/usesounds.ts","./src/services/gemini.ts"],"version":"5.9.3"}

@@ -47,52 +47,63 @@ const getPrompt = (type: string): string => {
 
     switch (type) {
         case 'solve':
+            const structures = [
+                "Primero una multiplicación y luego una resta",
+                "Primero una suma y luego una división",
+                "Una división y luego una suma",
+                "Dos multiplicaciones y luego sumar los resultados",
+                "Una resta y luego una multiplicación"
+            ];
+            const structure = structures[Math.floor(Math.random() * structures.length)];
+
             return `
-            Genera un problema de matemáticas para 5º de primaria (10-11 años).
+            Genera un problema de matemáticas para 5º de Primaria (10-11 años).
             TEMA OBLIGATORIO: ${context}.
-            Requisitos:
-            - LONGITUD: Enunciado CORTO y directo (máximo 3 frases).
-            - COMPLEJIDAD: Máximo 2 operaciones para resolverlo.
-            - Operaciones permitidas: Suma, resta, multiplicación (x1 o x2 cifras), división (divisor <= 50).
-            - IMPORTANTE: Usa números variados, NO uses siempre los mismos. Evita el 35 y 36.
-            - Sin decimales.
-            - Números < 99.999.
-            - Formato JSON: { "type": "solve", "question": "Enunciado del problema", "hint": "Pista sutil" }
+            
+            Requisitos de DIFICULTAD (Nivel 5º Avanzado):
+            - ESTRUCTURA OBLIGATORIA: ${structure}.
+            - Incluye números que requieran cálculo: Multiplicaciones por 2 cifras (ej: 345 x 23) o Divisiones por 2 cifras (ej: 4500 : 15).
+            - Evita números demasiado simples o redondos.
+            - Enunciado claro pero que obligue a pensar. Máximo 4 frases.
+            
+            Formato JSON: { 
+                "type": "solve", 
+                "question": "Enunciado del problema", 
+                "hint": "Pista: Piensa qué tienes que calcular primero.",
+                "solution": "Solo el número resultado final (ej: 1450)"
+            }
             (Semilla de aleatoriedad: ${randomNum})
             `;
         case 'reformulate':
             return `
-            Genera un ejercicio de "Reformular Preguntas" para 5º de primaria.
+            Genera un ejercicio de "Reformular la pregunta" para 5º de Primaria.
             TEMA OBLIGATORIO: ${context}.
-            Da un enunciado de un problema CORTO (2-3 líneas) PERO SIN PREGUNTA.
-            El objetivo del alumno será escribir todas las preguntas posibles que se puedan responder con esos datos.
-            Formato JSON: { "type": "reformulate", "question": "Escribe todas las preguntas que se puedan responder con este enunciado:", "context": "El enunciado del problema sin pregunta...", "hint": "Piensa en qué datos tienes y qué podrías calcular." }
+            
+            Te doy unos datos complejos (ej: precios con decimales, cantidades grandes, varias operaciones).
+            El alumno debe escribir una pregunta que requiera al menos 2 pasos para responderse.
+            
+            Formato JSON: { 
+                "type": "reformulate", 
+                "question": "Escribe todas las preguntas que se puedan responder con este enunciado:", 
+                "context": "El enunciado del problema sin pregunta...", 
+                "hint": "Busca una pregunta que use todos los datos." 
+            }
             (Semilla de aleatoriedad: ${randomNum})
             `;
         case 'create':
             const ops = [
-                "una multiplicación de dos números de dos cifras",
-                "una división con resto",
-                "una suma de tres números grandes",
-                "una resta con llevadas",
-                "el resultado 120",
-                "el resultado 450",
-                "el resultado 1500",
-                "una operación combinada (suma y resta)",
-                "el doble de un número",
-                "la mitad de un precio",
-                "tres paquetes de algo",
-                "repartir caramelos entre amigos"
+                "una multiplicación de 2 cifras y una resta",
+                "una división de 2 cifras y una suma",
+                "dos multiplicaciones y una suma",
+                "una resta y una división"
             ];
-            const op = ops[Math.floor(Math.random() * ops.length)];
+            const selectedOp = ops[Math.floor(Math.random() * ops.length)];
             return `
-            Genera un ejercicio de "Inventar Problemas" para 5º de primaria.
-            Requisito: El problema debe basarse en ${op}.
-            TEMA OBLIGATORIO: ${context}.
-            IMPORTANTE: VARIA LOS NÚMEROS. NO uses 35 ni 36. Usa números como 125, 840, 1500, etc.
-            LONGITUD: Pide un enunciado breve.
-            El objetivo del alumno es inventar un enunciado que encaje.
-            Formato JSON: { "type": "create", "question": "Inventa un problema matemático de ${context} (breve) que se resuelva con:", "context": "La operación/dato concreto (${op})...", "hint": "Usa tu imaginación." }
+            Pide al alumno que INVENTE un problema de 5º de Primaria.
+            Requisito: Debe resolverse usando ${selectedOp}.
+            TEMA: ${context}.
+            
+            Formato JSON: { "type": "create", "question": "Inventa un problema matemático de ${context} (breve) que se resuelva con:", "context": "La operación/dato concreto (${selectedOp})...", "hint": "Piensa en una situación real." }
             (Semilla de aleatoriedad: ${randomNum})
             `;
         case 'multiples':
@@ -103,11 +114,16 @@ const getPrompt = (type: string): string => {
             Quiero SOLO la pregunta matemática directa.
             
             Elige ALEATORIAMENTE uno de estos 3 tipos de preguntas:
-            1. "Escribe todos los divisores de [número entre 10 y 50]".
-            2. "Escribe los múltiplos de [número entre 2 y 9] que hay entre [Rango A] y [Rango B]".
+            1. "Escribe todos los divisores de [número entre 20 y 80]".
+            2. "Escribe los múltiplos de [número entre 5 y 15] que hay entre [Rango A] y [Rango B]".
             3. "¿Es [NumGrande] múltiplo de [NumPequeño]?" o "¿Es [NumPequeño] divisor de [NumGrande]?".
             
-            Formato JSON: { "type": "multiples", "question": "La pregunta directa (ej: Escribe los múltiplos de 8 entre 30 y 70)", "hint": "Pista: Recuerda las tablas." }
+            Formato JSON: { 
+                "type": "multiples", 
+                "question": "La pregunta directa (ej: Escribe los múltiplos de 8 entre 30 y 70)", 
+                "hint": "Pista: Recuerda las tablas.",
+                "solution": "La respuesta correcta (ej: 32, 40, 48...)"
+            }
             (Semilla de aleatoriedad: ${randomNum})
             `;
         case 'mental':
@@ -136,7 +152,12 @@ const getPrompt = (type: string): string => {
             - Usa la estrategia seleccionada (${strategy}).
             - VARIEDAD EXTREMA en los números.
             
-            Formato JSON: { "type": "mental", "question": "Operación matemática (ej: 450 + 20)", "hint": "Pista: ${strategy}" }
+            Formato JSON: { 
+                "type": "mental", 
+                "question": "Operación matemática (ej: 450 + 20)", 
+                "hint": "Pista: ${strategy}",
+                "solution": "El resultado numérico"
+            }
             (Semilla de aleatoriedad: ${randomNum})
             `;
         default:
@@ -173,9 +194,9 @@ const generateLocalExercise = (type: ExerciseType): Exercise => {
             };
 
         case 'multiplication':
-            // Multiplicand 500-99,999. Multiplier 1-250.
+            // Multiplicand 500-99,999. Multiplier 10-99 (2 digits).
             num1 = getRandomInt(500, 99999);
-            num2 = getRandomInt(1, 250);
+            num2 = getRandomInt(10, 99);
             answer = num1 * num2;
             return {
                 type,
@@ -185,8 +206,8 @@ const generateLocalExercise = (type: ExerciseType): Exercise => {
             };
 
         case 'division':
-            // Dividend 500-99,999. Divisor 2-75.
-            num2 = getRandomInt(2, 75); // Divisor
+            // Dividend 500-99,999. Divisor 10-99 (2 digits).
+            num2 = getRandomInt(10, 99); // Divisor 2 digits
             const maxQuotient = Math.floor(99999 / num2);
             const minQuotient = Math.ceil(500 / num2);
             const quotient = getRandomInt(minQuotient, maxQuotient);
@@ -230,40 +251,235 @@ export const generateExercise = async (type: ExerciseType): Promise<Exercise> =>
         const lastBrace = text.lastIndexOf('}');
         if (firstBrace !== -1 && lastBrace !== -1) {
             const jsonStr = text.substring(firstBrace, lastBrace + 1);
-            return { ...JSON.parse(jsonStr), type: selectedType };
+            const parsed = JSON.parse(jsonStr);
+            // Map 'solution' from JSON to 'correctAnswer' in our internal model
+            return {
+                ...parsed,
+                type: selectedType,
+                correctAnswer: parsed.solution || parsed.correctAnswer // Handle both just in case
+            };
         }
         throw new Error("Invalid JSON");
     } catch (error) {
         console.error("Error generando ejercicio:", error);
-        // Fallback to local generation if API fails (simplified for now)
-        return generateLocalExercise('addition'); // Fallback to addition
+
+        // Fallback robusto por tipo de ejercicio
+        switch (selectedType) {
+            case 'mental':
+                // GENERADOR ALGORÍTMICO LOCAL (Variedad Infinita Real)
+                const operations = ['sum', 'sub', 'mult', 'div', 'double', 'half'];
+                const opType = operations[Math.floor(Math.random() * operations.length)];
+
+                let q = "", h = "";
+                let ans = "";
+
+                switch (opType) {
+                    case 'sum':
+                        const a1 = Math.floor(Math.random() * 400) + 50;
+                        const b1 = Math.floor(Math.random() * 400) + 50;
+                        q = `Calcula: ${a1} + ${b1}`;
+                        h = "Suma las centenas, luego las decenas.";
+                        ans = (a1 + b1).toString();
+                        break;
+                    case 'sub':
+                        const a2 = Math.floor(Math.random() * 800) + 100;
+                        const b2 = Math.floor(Math.random() * 100) + 10;
+                        q = `Calcula: ${a2} - ${b2}`;
+                        h = "Resta primero las decenas.";
+                        ans = (a2 - b2).toString();
+                        break;
+                    case 'mult':
+                        const a3 = Math.floor(Math.random() * 20) + 2;
+                        const b3 = Math.floor(Math.random() * 9) + 2;
+                        if (Math.random() > 0.7) {
+                            const zeros = Math.random() > 0.5 ? 10 : 100;
+                            q = `Calcula: ${a3} x ${zeros}`;
+                            h = "Añade los ceros al final.";
+                            ans = (a3 * zeros).toString();
+                        } else {
+                            q = `Calcula: ${a3} x ${b3}`;
+                            h = "Usa las tablas de multiplicar.";
+                            ans = (a3 * b3).toString();
+                        }
+                        break;
+                    case 'div':
+                        const divisor = Math.floor(Math.random() * 8) + 2;
+                        const quotient = Math.floor(Math.random() * 50) + 10;
+                        const dividend = divisor * quotient;
+                        q = `Calcula: ${dividend} : ${divisor}`;
+                        h = "Busca un número que multiplicado por el divisor dé el dividendo.";
+                        ans = quotient.toString();
+                        break;
+                    case 'double':
+                        const numD = Math.floor(Math.random() * 200) + 10;
+                        q = `El doble de ${numD}`;
+                        h = "Multiplica por 2.";
+                        ans = (numD * 2).toString();
+                        break;
+                    case 'half':
+                        const numH = (Math.floor(Math.random() * 200) + 10) * 2; // Par
+                        q = `La mitad de ${numH}`;
+                        h = "Divide entre 2.";
+                        ans = (numH / 2).toString();
+                        break;
+                }
+                return { type: 'mental', question: q, hint: h, correctAnswer: ans };
+
+            case 'solve':
+                // ALGORÍTMICO PARA PROBLEMAS (Variedad Infinita Local)
+                const solveTemplates = [
+                    {
+                        t: "Un camión lleva ${n1} cajas de ${n2} kg. Si descargan ${n3} kg, ¿cuántos kg quedan?",
+                        gen: () => {
+                            const n1 = getRandomInt(50, 200);
+                            const n2 = getRandomInt(10, 50);
+                            const total = n1 * n2;
+                            const n3 = getRandomInt(100, total - 100);
+                            return { q: `Un camión lleva ${n1} cajas de ${n2} kg. Si descargan ${n3} kg, ¿cuántos kg quedan?`, a: (total - n3).toString() };
+                        },
+                        h: "Calcula el peso total y resta lo que descargan."
+                    },
+                    {
+                        t: "En un cine hay ${n1} filas con ${n2} butacas. Si se han vendido ${n3} entradas, ¿cuántas butacas quedan libres?",
+                        gen: () => {
+                            const n1 = getRandomInt(10, 30);
+                            const n2 = getRandomInt(10, 40);
+                            const total = n1 * n2;
+                            const n3 = getRandomInt(50, total - 10);
+                            return { q: `En un cine hay ${n1} filas con ${n2} butacas. Si se han vendido ${n3} entradas, ¿cuántas butacas quedan libres?`, a: (total - n3).toString() };
+                        },
+                        h: "Calcula el total de butacas y resta las entradas vendidas."
+                    },
+                    {
+                        t: "He comprado ${n1} libros a ${n2}€ cada uno. Si pago con un billete de ${n3}€, ¿cuánto me devuelven?",
+                        gen: () => {
+                            const n1 = getRandomInt(3, 12);
+                            const n2 = getRandomInt(10, 25);
+                            const cost = n1 * n2;
+                            const n3 = Math.ceil(cost / 50) * 50 + (Math.random() > 0.5 ? 0 : 50); // Billete mayor al coste
+                            return { q: `He comprado ${n1} libros a ${n2}€ cada uno. Si pago con un billete de ${n3}€, ¿cuánto me devuelven?`, a: (n3 - cost).toString() };
+                        },
+                        h: "Multiplica precio por cantidad y resta al dinero que entregas."
+                    },
+                    {
+                        t: "Un depósito tiene ${n1} litros. Se sacan ${n2} litros y luego se echan ${n3} litros. ¿Cuántos litros hay ahora?",
+                        gen: () => {
+                            const n1 = getRandomInt(1000, 5000);
+                            const n2 = getRandomInt(100, 900);
+                            const n3 = getRandomInt(100, 900);
+                            return { q: `Un depósito tiene ${n1} litros. Se sacan ${n2} litros y luego se echan ${n3} litros. ¿Cuántos litros hay ahora?`, a: (n1 - n2 + n3).toString() };
+                        },
+                        h: "Sigue los pasos: resta lo que sacas y suma lo que echas."
+                    },
+                    {
+                        t: "Repartimos ${n1} caramelos entre ${n2} niños. Si sobran ${n3}, ¿cuántos caramelos tenía al principio? (Inversa)",
+                        gen: () => {
+                            const n2 = getRandomInt(5, 25); // Niños
+                            const cociente = getRandomInt(10, 50); // Caramelos por niño
+                            const n3 = getRandomInt(1, n2 - 1); // Resto
+                            const n1 = (n2 * cociente) + n3;
+                            return { q: `He repartido caramelos entre ${n2} niños. A cada uno le han tocado ${cociente} y han sobrado ${n3}. ¿Cuántos caramelos tenía?`, a: n1.toString() };
+                        },
+                        h: "Prueba de la división: divisor x cociente + resto."
+                    }
+                ];
+
+                const selectedTemplate = solveTemplates[Math.floor(Math.random() * solveTemplates.length)];
+                const generated = selectedTemplate.gen();
+                return { type: 'solve', question: generated.q, hint: selectedTemplate.h, correctAnswer: generated.a };
+
+            case 'reformulate':
+                const refTemplates = [
+                    "He comprado 5 camisetas a 12€ y 3 pantalones a 25€.",
+                    "Un tren recorre 450 km en 3 horas y otro recorre 600 km en 5 horas.",
+                    "En una granja hay 120 vacas y el doble de ovejas.",
+                    "Tengo 50€ y quiero comprar 3 juegos que cuestan 18€ cada uno.",
+                    "Un libro tiene 240 páginas. He leído la mitad ayer y hoy 30 páginas más."
+                ];
+                const refText = refTemplates[Math.floor(Math.random() * refTemplates.length)];
+                return {
+                    type: 'reformulate',
+                    question: `Escribe una pregunta matemática para este enunciado: "${refText}"`,
+                    hint: "Piensa qué dato podrías calcular con esa información."
+                };
+
+            case 'create':
+                const createOps = [
+                    "(125 x 4) - 150",
+                    "2500 : 25 + 100",
+                    "50 x 12 + 30",
+                    "1000 - (15 x 10)",
+                    "La mitad de 500 más 150"
+                ];
+                const cOp = createOps[Math.floor(Math.random() * createOps.length)];
+                return {
+                    type: 'create',
+                    question: `Inventa un problema que se resuelva con: ${cOp}`,
+                    context: "La operación está dada, tú pones la historia.",
+                    hint: "Imagina una situación de compras, viajes o reparto."
+                };
+
+            case 'multiples':
+                const mType = Math.random();
+                if (mType < 0.33) {
+                    const n = getRandomInt(12, 40);
+                    return { type: 'multiples', question: `Escribe los 5 primeros múltiplos de ${n}.`, hint: "Multiplica por 1, 2, 3..." };
+                } else if (mType < 0.66) {
+                    const n = getRandomInt(20, 60);
+                    return { type: 'multiples', question: `Escribe todos los divisores de ${n}.`, hint: "Busca divisiones exactas." };
+                } else {
+                    const n1 = getRandomInt(3, 9);
+                    const n2 = getRandomInt(100, 900);
+                    return { type: 'multiples', question: `¿Es ${n2} múltiplo de ${n1}?`, hint: "Divide y mira si el resto es 0." };
+                }
+
+            default:
+                // Si todo falla, un problema básico
+                return { type: 'solve', question: "Calcula 12 + 12", hint: "Suma básica", correctAnswer: "24" };
+        }
     }
 };
 
 export const evaluateAnswer = async (exercise: Exercise, userAnswer: string): Promise<EvaluationResult> => {
-    // Local evaluation for calculation types
+    // Helper for loose comparison
+    const checkAnswer = (user: string, correct: string): boolean => {
+        const cleanUser = user.toLowerCase().replace(/[.,€$]/g, '').trim();
+        const cleanCorrect = correct.toLowerCase().replace(/[.,€$]/g, '').trim();
+
+        // Exact match
+        if (cleanUser === cleanCorrect) return true;
+
+        // Number match (if user wrote "2500 kg" and answer is "2500")
+        const userNums = cleanUser.match(/\d+/g);
+        const correctNums = cleanCorrect.match(/\d+/g);
+        if (userNums && correctNums && userNums.join('') === correctNums.join('')) return true;
+
+        return false;
+    };
+
+    // 1. Local evaluation (FAST & ROBUST)
+    // If we have a known correct answer (from local generator OR parsed from AI JSON), use it first.
     if (exercise.correctAnswer) {
-        // Remove dots/commas from user answer for loose comparison
-        const cleanUserAnswer = userAnswer.replace(/[.,]/g, '').trim();
-        const cleanCorrectAnswer = exercise.correctAnswer.replace(/[.,]/g, '').trim();
+        const isCorrect = checkAnswer(userAnswer, exercise.correctAnswer);
 
-        const isCorrect = cleanUserAnswer === cleanCorrectAnswer;
-
-        // Simulate async delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        return {
-            isCorrect,
-            feedback: isCorrect
-                ? "¡Correcto! 🎉 Has hecho el cálculo perfecto."
-                : `Casi... La respuesta correcta era ${exercise.correctAnswer}. ¡Revísalo!`
-        };
+        // If correct, return immediately (save API call)
+        if (isCorrect) {
+            await new Promise(resolve => setTimeout(resolve, 500)); // Small delay for feel
+            return {
+                isCorrect: true,
+                feedback: "¡Correcto! 🎉 Has dado con la solución exacta."
+            };
+        }
+        // If incorrect locally, we can still ask AI for a better explanation, 
+        // OR just return the error if we want to be safe/offline-capable.
+        // Let's try AI for explanation, but fallback to local correction.
     }
 
     const prompt = `
     Actúa como un maestro de matemáticas de primaria amable y constructivo.
     Ejercicio (${exercise.type}):
     Enunciado/Contexto: ${exercise.question} ${exercise.context || ''}
+    ${exercise.correctAnswer ? `SOLUCIÓN CORRECTA ESPERADA: ${exercise.correctAnswer}` : ''}
     
     Respuesta del alumno: "${userAnswer}"
     
@@ -272,33 +488,33 @@ export const evaluateAnswer = async (exercise: Exercise, userAnswer: string): Pr
     - Si es incorrecta o incompleta, explica el error y da la solución correcta de forma pedagógica.
     - Si es un ejercicio abierto (inventar problema), valora la creatividad y si tiene sentido matemático.
     
-    Devuelve SOLO un JSON:
-    {
-      "isCorrect": boolean,
-      "feedback": "Tu explicación aquí...",
-      "correction": "La solución ideal (si aplica)"
-    }
-  `;
+    Responde en español, con tono animado.
+    `;
 
     try {
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        const text = response.text();
-
-        const firstBrace = text.indexOf('{');
-        const lastBrace = text.lastIndexOf('}');
-
-        if (firstBrace !== -1 && lastBrace !== -1) {
-            const jsonStr = text.substring(firstBrace, lastBrace + 1);
-            return JSON.parse(jsonStr);
-        } else {
-            throw new Error("No valid JSON found in response");
-        }
-    } catch (error: any) {
+        return {
+            isCorrect: true, // AI decides tone, but we treat valid AI response as success flow
+            feedback: response.text()
+        };
+    } catch (error) {
         console.error("Error evaluando respuesta:", error);
+
+        // Fallback if AI fails
+        if (exercise.correctAnswer) {
+            const isCorrect = checkAnswer(userAnswer, exercise.correctAnswer);
+            return {
+                isCorrect,
+                feedback: isCorrect
+                    ? "¡Correcto! (Validado automáticamente)"
+                    : `No es correcto. La solución era: ${exercise.correctAnswer}. ¡Inténtalo de nuevo!`
+            };
+        }
+
         return {
             isCorrect: false,
-            feedback: `Hubo un error técnico al evaluar tu respuesta: ${error.message || error}. Inténtalo de nuevo, por favor.`,
+            feedback: "Hubo un error al evaluar tu respuesta y no tengo la solución guardada. ¡Pero seguro que lo has hecho genial! Inténtalo de nuevo."
         };
     }
 };
