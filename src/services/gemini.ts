@@ -2,25 +2,21 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 
-console.log("API Key present:", !!API_KEY);
-if (API_KEY) console.log("API Key length:", API_KEY.length);
-
 if (!API_KEY) {
     console.error("Falta la API Key de Gemini en .env.local");
 }
 
-const genAI = new GoogleGenerativeAI(API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-console.log("Gemini Service initialized with model: gemini-2.0-flash");
+const genAI = new GoogleGenerativeAI(API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-
-export type ExerciseType = 'solve' | 'reformulate' | 'create' | 'multiples' | 'mental' | 'random';
+export type ExerciseType = 'solve' | 'reformulate' | 'create' | 'multiples' | 'mental' | 'random' | 'addition' | 'subtraction' | 'multiplication' | 'division';
 
 export interface Exercise {
     type: ExerciseType;
     question: string;
-    context?: string; // For "reformulate" or "create" types
+    context?: string;
     hint?: string;
+    correctAnswer?: string; // For local validation
 }
 
 export interface EvaluationResult {
@@ -34,6 +30,16 @@ const CONTEXTS = [
     "Videojuegos y programación", "Animales y zoológico", "Viajes y geografía",
     "Superhéroes", "Historia y castillos", "Fantasía y dragones", "Escuela y excursiones"
 ];
+
+// Local Random Number Generator
+const getRandomInt = (min: number, max: number) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+// Format number with dots for thousands (Spanish locale)
+const formatNumber = (num: number) => {
+    return num.toLocaleString('es-ES');
+};
 
 const getPrompt = (type: string): string => {
     const context = CONTEXTS[Math.floor(Math.random() * CONTEXTS.length)];
@@ -138,7 +144,76 @@ const getPrompt = (type: string): string => {
     }
 };
 
+const generateLocalExercise = (type: ExerciseType): Exercise => {
+    let num1, num2, answer;
+
+    switch (type) {
+        case 'addition':
+            // Two numbers between 500 and 999,999
+            num1 = getRandomInt(500, 999999);
+            num2 = getRandomInt(500, 999999);
+            answer = num1 + num2;
+            return {
+                type,
+                question: `Calcula: ${formatNumber(num1)} + ${formatNumber(num2)}`,
+                correctAnswer: answer.toString(),
+                hint: "Coloca bien los números, unidades con unidades."
+            };
+
+        case 'subtraction':
+            // Minuend 500-999,999. Subtrahend < Minuend.
+            num1 = getRandomInt(500, 999999);
+            num2 = getRandomInt(500, num1 - 1); // Ensure positive result
+            answer = num1 - num2;
+            return {
+                type,
+                question: `Calcula: ${formatNumber(num1)} - ${formatNumber(num2)}`,
+                correctAnswer: answer.toString(),
+                hint: "Recuerda las llevadas."
+            };
+
+        case 'multiplication':
+            // Multiplicand 500-99,999. Multiplier 1-250.
+            num1 = getRandomInt(500, 99999);
+            num2 = getRandomInt(1, 250);
+            answer = num1 * num2;
+            return {
+                type,
+                question: `Calcula: ${formatNumber(num1)} × ${formatNumber(num2)}`,
+                correctAnswer: answer.toString(),
+                hint: "Multiplica primero por las unidades, luego decenas..."
+            };
+
+        case 'division':
+            // Dividend 500-99,999. Divisor 2-75.
+            num2 = getRandomInt(2, 75); // Divisor
+            const maxQuotient = Math.floor(99999 / num2);
+            const minQuotient = Math.ceil(500 / num2);
+            const quotient = getRandomInt(minQuotient, maxQuotient);
+
+            num1 = quotient * num2; // Dividend
+            answer = quotient;
+
+            return {
+                type,
+                question: `Calcula: ${formatNumber(num1)} ÷ ${formatNumber(num2)}`,
+                correctAnswer: answer.toString(),
+                hint: "Busca un número que multiplicado por el divisor te dé el dividendo."
+            };
+
+        default:
+            throw new Error("Tipo de cálculo no soportado localmente");
+    }
+};
+
 export const generateExercise = async (type: ExerciseType): Promise<Exercise> => {
+    // Check if it's a local calculation type
+    if (['addition', 'subtraction', 'multiplication', 'division'].includes(type)) {
+        // Simulate async delay for consistency
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return generateLocalExercise(type);
+    }
+
     let selectedType = type;
     if (type === 'random') {
         const types: ExerciseType[] = ['solve', 'reformulate', 'create', 'multiples', 'mental'];
@@ -160,68 +235,31 @@ export const generateExercise = async (type: ExerciseType): Promise<Exercise> =>
         throw new Error("Invalid JSON");
     } catch (error) {
         console.error("Error generando ejercicio:", error);
-
-        // GENERADOR ALGORÍTMICO LOCAL (Variedad Infinita Real)
-        // Si la API falla, generamos un problema matemático al vuelo.
-        const operations = ['sum', 'sub', 'mult', 'div', 'double', 'half'];
-        const opType = operations[Math.floor(Math.random() * operations.length)];
-
-        let q = "", h = "";
-
-        switch (opType) {
-            case 'sum':
-                const a1 = Math.floor(Math.random() * 400) + 50;
-                const b1 = Math.floor(Math.random() * 400) + 50;
-                q = `Calcula: ${a1} + ${b1}`;
-                h = "Suma las centenas, luego las decenas.";
-                break;
-            case 'sub':
-                const a2 = Math.floor(Math.random() * 800) + 100;
-                const b2 = Math.floor(Math.random() * 100) + 10;
-                q = `Calcula: ${a2} - ${b2}`;
-                h = "Resta primero las decenas.";
-                break;
-            case 'mult':
-                const a3 = Math.floor(Math.random() * 20) + 2;
-                const b3 = Math.floor(Math.random() * 9) + 2;
-                // A veces x10 o x100
-                if (Math.random() > 0.7) {
-                    const zeros = Math.random() > 0.5 ? 10 : 100;
-                    q = `Calcula: ${a3} x ${zeros}`;
-                    h = "Añade los ceros al final.";
-                } else {
-                    q = `Calcula: ${a3} x ${b3}`;
-                    h = "Usa las tablas de multiplicar.";
-                }
-                break;
-            case 'div':
-                const divisor = Math.floor(Math.random() * 8) + 2;
-                const quotient = Math.floor(Math.random() * 50) + 10;
-                const dividend = divisor * quotient;
-                q = `Calcula: ${dividend} : ${divisor}`;
-                h = "Busca un número que multiplicado por el divisor dé el dividendo.";
-                break;
-            case 'double':
-                const numD = Math.floor(Math.random() * 200) + 10;
-                q = `El doble de ${numD}`;
-                h = "Multiplica por 2.";
-                break;
-            case 'half':
-                const numH = (Math.floor(Math.random() * 200) + 10) * 2; // Par
-                q = `La mitad de ${numH}`;
-                h = "Divide entre 2.";
-                break;
-        }
-
-        return {
-            type: selectedType,
-            question: q,
-            hint: h
-        };
+        // Fallback to local generation if API fails (simplified for now)
+        return generateLocalExercise('addition'); // Fallback to addition
     }
 };
 
 export const evaluateAnswer = async (exercise: Exercise, userAnswer: string): Promise<EvaluationResult> => {
+    // Local evaluation for calculation types
+    if (exercise.correctAnswer) {
+        // Remove dots/commas from user answer for loose comparison
+        const cleanUserAnswer = userAnswer.replace(/[.,]/g, '').trim();
+        const cleanCorrectAnswer = exercise.correctAnswer.replace(/[.,]/g, '').trim();
+
+        const isCorrect = cleanUserAnswer === cleanCorrectAnswer;
+
+        // Simulate async delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        return {
+            isCorrect,
+            feedback: isCorrect
+                ? "¡Correcto! 🎉 Has hecho el cálculo perfecto."
+                : `Casi... La respuesta correcta era ${exercise.correctAnswer}. ¡Revísalo!`
+        };
+    }
+
     const prompt = `
     Actúa como un maestro de matemáticas de primaria amable y constructivo.
     Ejercicio (${exercise.type}):
@@ -246,9 +284,7 @@ export const evaluateAnswer = async (exercise: Exercise, userAnswer: string): Pr
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
-        console.log("Raw evaluation response:", text); // Debug log
 
-        // More robust JSON extraction
         const firstBrace = text.indexOf('{');
         const lastBrace = text.lastIndexOf('}');
 
