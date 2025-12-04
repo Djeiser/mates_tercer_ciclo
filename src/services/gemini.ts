@@ -7,7 +7,7 @@ if (!API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 export type ExerciseType = 'solve' | 'reformulate' | 'create' | 'multiples' | 'mental' | 'random' | 'addition' | 'subtraction' | 'multiplication' | 'division';
 
@@ -490,12 +490,12 @@ export const evaluateAnswer = async (exercise: Exercise, userAnswer: string): Pr
     try {
         let feedbackText = "";
         try {
-            // Try Flash first (Fast & Cheap)
-            feedbackText = await tryGenerate("gemini-1.5-flash");
+            // Try Flash 2.0 first
+            feedbackText = await tryGenerate("gemini-2.0-flash");
         } catch (flashError) {
-            console.warn("Gemini Flash falló, intentando con Pro...", flashError);
-            // Fallback to Pro (Stable)
-            feedbackText = await tryGenerate("gemini-pro");
+            console.warn("Gemini 2.0 Flash falló, intentando con Lite...", flashError);
+            // Fallback to Flash Lite (Very fast)
+            feedbackText = await tryGenerate("gemini-2.0-flash-lite");
         }
 
         return {
